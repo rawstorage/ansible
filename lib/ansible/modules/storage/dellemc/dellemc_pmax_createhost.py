@@ -63,7 +63,7 @@ requirements:
 '''
 EXAMPLES = '''
 ---
-- name: "Add volumes to existing storage group"
+- name: "Create a New Host"
   connection: local
   hosts: localhost
   vars:
@@ -93,54 +93,27 @@ EXAMPLES = '''
 RETURN = r'''
 '''
 from ansible.module_utils.basic import AnsibleModule
-
+from ansible.module_utils.dellemc import dellemc_argument_spec, pmaxapi
 
 def main():
     changed = False
-    module = AnsibleModule(
-        argument_spec=dict(
-            unispherehost=dict(required=True),
-            universion=dict(type='int', required=False),
-            verifycert=dict(type='bool', required=True),
-            user=dict(type='str', required=True),
-            password=dict(type='str', required=True, no_log=True),
-            array_id=dict(type='str', required=True),
-            host_id=dict(type='str', required=True),
-            initiator_list=dict(type='list', required=True)
-        )
+    argument_spec = dellemc_argument_spec()
+    argument_spec.update(dict(
+        host_id=dict(type='str', required=True),
+        initiator_list=dict(type='list', required=True)
     )
-    try:
-        import PyU4V
-    except:
-        module.fail_json(
-            msg='Requirements not met PyU4V is not installed, please install'
-                'via PIP')
-        module.exit_json(changed=changed)
-
-    # Crete Connection to Unisphere Server to Make REST calls
-
-    conn = PyU4V.U4VConn(server_ip=module.params['unispherehost'], port=8443,
-                         array_id=module.params['array_id'],
-                         verify=module.params['verifycert'],
-                         username=module.params['user'],
-                         password=module.params['password'],
-                         u4v_version=module.params['universion'])
-
-    # Setting connection shortcut to Provisioning modules to simplify code
-
+    )
+    module = AnsibleModule(argument_spec=argument_spec)
+    # Setup connection to API and import provisioning modules.
+    conn = pmaxapi(module)
     dellemc = conn.provisioning
-
     # Compile a list of existing hosts.
-
     hostlist = dellemc.get_host_list()
-
-    # Check if Host Name already exists
-
+    # Check if Host Name already exists.
     if module.params['host_id'] not in hostlist:
         dellemc.create_host(host_name=module.params['host_id'],
                             initiator_list=module.params['initiator_list'])
         changed = True
-
     else:
         module.fail_json(msg='Host Name already exists, Failing Task')
     module.exit_json(changed=changed)

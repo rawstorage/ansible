@@ -65,7 +65,7 @@ requirements:
 '''
 EXAMPLES = '''
 ---
-- name: "Add volumes to existing storage group"
+- name: "Create a Host Group for Cluster"
   connection: local
   hosts: localhost
   vars:
@@ -78,6 +78,7 @@ EXAMPLES = '''
     verifycert: false
 
   tasks:
+  - name: Create Cluster
     dellemc_pmax_createhostgroup:
              unispherehost: "{{unispherehost}}"
              universion: "{{universion}}"
@@ -94,67 +95,31 @@ EXAMPLES = '''
 RETURN = r'''
 '''
 from ansible.module_utils.basic import AnsibleModule
-
+from ansible.module_utils.dellemc import dellemc_argument_spec, pmaxapi
 
 def main():
     changed = False
-    # print (changed)
-    module = AnsibleModule(
-        argument_spec=dict(
-            unispherehost=dict(required=True),
-            universion=dict(type='int', required=False),
-            verifycert=dict(type='bool', required=True),
-            user=dict(type='str', required=True),
-            password=dict(type='str', required=True, no_log=True),
-            array_id=dict(type='str', required=True),
+    argument_spec = dellemc_argument_spec()
+    argument_spec.update(dict(
             cluster_name=dict(type='str', required=True),
             host_list=dict(type='list', required=True),
-
         )
     )
-    try:
-        import PyU4V
-    except:
-        module.fail_json(
-            msg='Requirements not met PyU4V is not installed, please install'
-                'via PIP')
-        module.exit_json(changed=changed)
-
-    # Make REST call to Unisphere Server and execute create Host Group
-
-    payload = (
-        {
-            "hostGroupId": module.params['cluster_name'],
-            "hostId": module.params['host_list']
-        }
-    )
-    # Crete Connection to Unisphere Server to Make REST calls
-
-    conn = PyU4V.U4VConn(server_ip=module.params['unispherehost'], port=8443,
-                         array_id=module.params['array_id'],
-                         verify=module.params['verifycert'],
-                         username=module.params['user'],
-                         password=module.params['password'],
-                         u4v_version=module.params['universion'])
-
-    # Setting connection shortcut to Provisioning modules to simplify code
-
+    module = AnsibleModule(argument_spec=argument_spec)
+    # Setup connection to API and import provisioning modules.
+    conn = pmaxapi(module)
     dellemc = conn.provisioning
     # Check for each host in the host list that it exists, otherwise fail
     # module.
-
     configuredhostlist = dellemc.get_host_list()
     hostgrouplist = dellemc.get_hostgroup_list()
-
     host_exists = True
-
     if module.params['cluster_name'] not in hostgrouplist:
         for host in module.params["host_list"]:
             if host not in configuredhostlist:
                 module.fail_json(msg='Host %s does not exist, failing task' % (
-                    host))
+                    host), changed=changed)
                 host_exists = False
-
     if module.params['cluster_name'] not in hostgrouplist and host_exists:
         dellemc.create_hostgroup(hostgroup_id=module.params['cluster_name'],
                                  host_list=module.params['host_list'])
