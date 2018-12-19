@@ -150,7 +150,7 @@ def main():
         volumeIdentifier=dict(type='str', required=True)
     )
     )
-    # Crete Connection to Unisphere Server to Make REST calls
+    # Create Connection to Unisphere Server to Make REST calls
     # Setting connection shortcut to Provisioning modules to simplify code
     module = AnsibleModule(argument_spec=argument_spec)
     conn = pmaxapi(module)
