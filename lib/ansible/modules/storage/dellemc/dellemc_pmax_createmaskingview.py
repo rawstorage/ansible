@@ -114,7 +114,7 @@ def main():
         )
     )
     module = AnsibleModule(argument_spec=argument_spec)
-    # Crete Connection to Unisphere Server to Make REST calls
+    # Create Connection to Unisphere Server to Make REST calls
     conn = pmaxapi(module)
     dellemc = conn.provisioning
     # Make REST call to Unisphere Server and execute create masking view
