@@ -68,22 +68,14 @@ EXAMPLES = '''
     verifycert: false
 
   tasks:
-    - name: "Create New Storage Group and add data volumes"
-      dellemc_pmax_createsg:
-        array_id: "{{array_id}}"
-        cap_unit: GB
-        num_vols: 1
-        password: "{{password}}"
-        sgname: "{{sgname}}"
-        slo: Diamond
-        srp_id: SRP_1
+    - name: "Base Values for Task Add module Specific paramters"
+      dellemc_pmax_XXXXXX:
         unispherehost: "{{unispherehost}}"
         universion: "{{universion}}"
+        array_id: "{{array_id}}"
         user: "{{user}}"
+        password: "{{password}}"
         verifycert: "{{verifycert}}"
-        vol_size: 1
-        workload: None
-        volumeIdentifier: 'REDO'
 '''
 RETURN = '''
 dellemc_pmax_createsg:
