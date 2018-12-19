@@ -4,14 +4,8 @@
 VERSION = 1.1
 USER_AGENT_BASE = 'Ansible'
 
-try:
-    import PyU4V
-    HAS_PyU4V = True
-except ImportError:
-    HAS_PyU4V = False
 
-
-def dellemc_argument_spec():
+def dellemc_pmax_argument_spec():
     return dict(
         unispherehost=dict(required=True),
         universion=dict(type='int', required=False),
@@ -21,8 +15,13 @@ def dellemc_argument_spec():
         array_id=dict(type='str', required=True),
     )
 
-
 def pmaxapi(module):
+    try:
+        import PyU4V
+        HAS_PyU4V = True
+    except ImportError:
+        HAS_PyU4V = False
+
     if not HAS_PyU4V:
         module.fail_json(msg='PyU4V is required for this module')
     else:
