@@ -79,9 +79,7 @@ EXAMPLES = '''
         universion: "{{universion}}"
         user: "{{user}}"
         verifycert: "{{verifycert}}"
-        vol_size: 1
-        workload: None
-        volumeIdentifier: 'REDO'
+        maskingview_name: "Ansible_MV"
 '''
 RETURN = '''
 dellemc_pmax_createsg:
