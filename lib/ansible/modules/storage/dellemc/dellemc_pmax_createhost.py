@@ -93,11 +93,11 @@ EXAMPLES = '''
 RETURN = r'''
 '''
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.dellemc import dellemc_argument_spec, pmaxapi
+from ansible.module_utils.dellemc import dellemc_pmax_argument_spec, pmaxapi
 
 def main():
     changed = False
-    argument_spec = dellemc_argument_spec()
+    argument_spec = dellemc_pmax_argument_spec()
     argument_spec.update(dict(
         host_id=dict(type='str', required=True),
         initiator_list=dict(type='list', required=True)

@@ -167,12 +167,12 @@ dellemc_pmax_createsg:
         }'
 '''
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.dellemc import dellemc_argument_spec, pmaxapi
+from ansible.module_utils.dellemc import dellemc_pmax_argument_spec, pmaxapi
 
 
 def main():
     changed = False
-    argument_spec = dellemc_argument_spec()
+    argument_spec = dellemc_pmax_argument_spec()
     argument_spec.update(dict(
         sgname=dict(type='str', required=True),
         srp_id=dict(type='str', required=False),
@@ -188,7 +188,6 @@ def main():
     # Setup connection to API and import provisioning modules.
     conn = pmaxapi(module)
     dellemc = conn.provisioning
-
     # Compile a list of existing storage groups.
     sglist = dellemc.get_storage_group_list()
     # Check if Storage Group already exists.

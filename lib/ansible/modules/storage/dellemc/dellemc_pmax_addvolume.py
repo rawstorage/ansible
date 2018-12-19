@@ -116,7 +116,7 @@ EXAMPLES = '''
         vol_size:  2
         cap_unit: 'GB'
         volumeIdentifier: 'REDO'
-  - debug: var=storagegroup_detail
+  - debug: var=sg_volume_detail
 '''
 RETURN = '''
 dellemc_pmax_createsg:
@@ -124,65 +124,47 @@ dellemc_pmax_createsg:
     returned: success
     type: dict
     sample: '{
-        "storagegroup_detail": {
-        "original_vol_list": [
-            "00123",
-            "00124",
-            "00125",
-            "00126",
-            "00127"
-        ],
-        "current_vol_list": [
-            "00123",
-            "00124",
-            "00125",
-            "00126",
-            "00127",
-            "00128"
+            "sg_volume_detail": {
+        "new_volumes": [
+            "00134"
         ],
         "storagegroup_name": "Ansible_SG"
     }
+}
+
 '''
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.dellemc import dellemc_argument_spec, pmaxapi
+from ansible.module_utils.dellemc import dellemc_pmax_argument_spec, pmaxapi
 
 
 def main():
     changed = False
-    module = AnsibleModule(
-        argument_spec=dict(
-            sgname=dict(type='str', required=True),
-            unispherehost=dict(required=True),
-            universion=dict(type='int', required=False),
-            verifycert=dict(type='bool', required=True),
-            user=dict(type='str', required=True),
-            password=dict(type='str', required=True, no_log=True),
-            array_id=dict(type='str', required=True),
-            num_vols=dict(type='int', required=True),
-            vol_size=dict(type='int', required=True),
-            cap_unit=dict(type='str', default='GB', choices=['GB',
-                                                              'TB',
-                                                              'MB', 'CYL']),
-            volumeIdentifier=dict(type='str', required=True)
-        )
+    argument_spec = dellemc_pmax_argument_spec()
+    argument_spec.update(dict(
+        sgname=dict(type='str', required=True),
+        num_vols=dict(type='int', required=True),
+        vol_size=dict(type='int', required=True),
+        cap_unit=dict(type='str', default='GB', choices=['GB',
+                                                         'TB',
+                                                         'MB', 'CYL']),
+        volumeIdentifier=dict(type='str', required=True)
+    )
     )
     # Crete Connection to Unisphere Server to Make REST calls
     # Setting connection shortcut to Provisioning modules to simplify code
+    module = AnsibleModule(argument_spec=argument_spec)
     conn = pmaxapi(module)
     dellemc = conn.provisioning
-    changed = False
-
     # Compile a list of existing storage groups.
-
     sglist = dellemc.get_storage_group_list()
-
     # Check if Storage Group already exists, if storage group does not exist
     # module will fail.
     if module.params['sgname'] not in sglist:
-        module.fail_json(msg='Storage group does not Exist, Failing Task')
+        module.fail_json(msg='Storage group does not Exist, Failing Task',
+                         changed=changed)
     else:
-    # If storage group exists module can proceed
-    # Build a list of the existing volumes in the storage group
+        # If storage group exists module can proceed
+        # Build a list of the existing volumes in the storage group
         sgvols_before = dellemc.get_volume_list(filters={
             'storageGroupId': module.params['sgname']})
         dellemc.add_new_vol_to_storagegroup(sg_id=module.params['sgname'],
@@ -192,17 +174,16 @@ def main():
                                             vol_name=module.params[
                                                 'volumeIdentifier'])
         changed = True
-    # Build a list of volumes in storage group after being modified
-        sgvols_after=dellemc.get_volume_list(filters={
+        # Build a list of volumes in storage group after being modified
+        sgvols_after = dellemc.get_volume_list(filters={
             'storageGroupId': module.params['sgname']})
+        newvols = (list(set(sgvols_after) - set(sgvols_before)))
         facts = ({'storagegroup_name': module.params[
             'sgname'],
-                                        'original_vol_list': sgvols_before,
-                                        'current_vol_list':
-                      sgvols_after
-                                        })
+                  'new_volumes': newvols
+                  })
         result = {'state': 'info', 'changed': changed}
-        module.exit_json(ansible_facts={'storagegroup_detail': facts},
+        module.exit_json(ansible_facts={'sg_volume_detail': facts},
                          **result)
 
 if __name__ == '__main__':

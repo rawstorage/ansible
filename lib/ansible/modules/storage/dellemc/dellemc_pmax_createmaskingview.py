@@ -86,7 +86,7 @@ EXAMPLES = '''
 
   tasks:
     - name: "Create Masking View for Host Access to storage group volumes"
-      dellemc_pmax_createsg:
+      dellemc_pmax_createmaskingview:
         array_id: "{{array_id}}"
         password: "{{password}}"
         unispherehost: "{{unispherehost}}"
@@ -95,59 +95,31 @@ EXAMPLES = '''
         verifycert: "{{verifycert}}"
         sgname: "{{sgname}}"
         portgroup_id: "Ansible_PG"
-        maskingview_name: "MyMaskingView"
+        host_or_cluster : "AnsibleCluster"
+        maskingview_name: "Ansible_MV"
 '''
 RETURN = r'''
 '''
 from ansible.module_utils.basic import AnsibleModule
-
+from ansible.module_utils.dellemc import dellemc_pmax_argument_spec, pmaxapi
 
 def main():
     changed = False
-    module = AnsibleModule(
-        argument_spec=dict(
-            unispherehost=dict(required=True),
-            universion=dict(type='int', required=False),
-            verifycert=dict(type='bool', required=True),
-            user=dict(type='str', required=True),
-            password=dict(type='str', required=True, no_log=True),
-            array_id=dict(type='str', required=True),
+    argument_spec = dellemc_pmax_argument_spec()
+    argument_spec.update(dict(
             sgname=dict(type='str', required=True),
             host_or_cluster=dict(type='str', required=True),
             portgroup_id=dict(type='str', required=True),
             maskingview_name=dict(type='str', required=True)
         )
     )
-    # Make REST call to Unisphere Server and execute create Host
-
+    module = AnsibleModule(argument_spec=argument_spec)
     # Crete Connection to Unisphere Server to Make REST calls
-    try:
-        import PyU4V
-    except:
-        module.fail_json(
-            msg='Requirements not met PyU4V is not installed, please install'
-                'via PIP')
-        module.exit_json(changed=changed)
-
-    conn = PyU4V.U4VConn(server_ip=module.params['unispherehost'], port=8443,
-                         array_id=module.params['array_id'],
-                         verify=module.params['verifycert'],
-                         username=module.params['user'],
-                         password=module.params['password'],
-                         u4v_version=module.params['universion'])
-
-    # Setting connection shortcut to Provisioning modules to simplify code
-
+    conn = pmaxapi(module)
     dellemc = conn.provisioning
-
-    # Make REST call to Unisphere Server and execute create storage group
-
-    # Compile a list of existing stroage groups.
-
+    # Make REST call to Unisphere Server and execute create masking view
     mvlist = dellemc.get_masking_view_list()
-
     # Check if Storage Group already exists
-
     if module.params['maskingview_name'] not in mvlist:
         dellemc.create_masking_view_existing_components(
             port_group_name=module.params['portgroup_id'],
