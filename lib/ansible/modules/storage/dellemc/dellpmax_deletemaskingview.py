@@ -19,8 +19,11 @@ author:
 short_description: "Template for creating Modules"
 version_added: "2.8"
 description:
-  - "This module has been tested against UNI 9.0. Every effort has been made
-  to verify the scripts run with valid input. These modules are a tech preview."
+  - "Deleting a Masking View WILL remove access to storage devices for the 
+  hosts in the view, please use this module with extreme caution as this is 
+  destructive. This module has been tested against UNI 9.0. Every effort has
+  been made to verify the scripts run with valid input. These modules are a
+  tech preview."
 module: dellemc_pmax_createsg
 options:
   array_id:
@@ -55,7 +58,7 @@ requirements:
 '''
 EXAMPLES = '''
 ---
-- name: "Provision Storage For DB Cluster"
+- name: "Delete Masking View"
   connection: local
   hosts: localhost
   vars:
@@ -68,15 +71,10 @@ EXAMPLES = '''
     verifycert: false
 
   tasks:
-    - name: "Create New Storage Group and add data volumes"
-      dellemc_pmax_createsg:
+    - name: "Delete Masking View"
+      dellemc_pmax_deletemaskingview:
         array_id: "{{array_id}}"
-        cap_unit: GB
-        num_vols: 1
         password: "{{password}}"
-        sgname: "{{sgname}}"
-        slo: Diamond
-        srp_id: SRP_1
         unispherehost: "{{unispherehost}}"
         universion: "{{universion}}"
         user: "{{user}}"
@@ -111,7 +109,6 @@ def main():
     # Setup connection to API and import  modules.
     conn = pmaxapi(module)
     dellemc = conn.provisioning
-    changed = False
     mvlist = dellemc.get_masking_view_list()
     # Check if Masking View Exists
     if module.params['maskingview_name'] in mvlist:
@@ -122,7 +119,7 @@ def main():
 
     else:
         module.fail_json(msg='Masking View Does Not Exist, Please verify the '
-                             'input parameters')
+                             'input parameters', changed=changed)
 
     module.exit_json(changed=changed)
     facts = "some facts to help user in task"
