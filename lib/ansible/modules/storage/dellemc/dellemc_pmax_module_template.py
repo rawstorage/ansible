@@ -23,7 +23,30 @@ description:
   to verify the scripts run with valid input. These modules are a tech preview."
 module: dellemc_pmax_createsg
 options:
-
+  array_id:
+    description:
+      - "Integer 12 Digit Serial Number of PowerMAX or VMAX array."
+    required: true
+  unispherehost:
+    description:
+      - "Fully Qualified Domain Name or IP address of Unisphere for PowerMax
+      host."
+    required: true
+  universion:
+    description:
+      - "Integer, version of unipshere software  e.g. 90"
+    required: true
+  verifycert:
+    description:
+      - "Boolean, security check on ssl certificates"
+    type: bool
+    required: true
+  user:
+    description:
+      - "Unisphere username"
+  password:
+    description:
+      - "password for Unisphere user"
 requirements:
   - Ansible
   - "Unisphere for PowerMax version 9.0 or higher."
