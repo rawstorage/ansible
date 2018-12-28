@@ -128,15 +128,43 @@ EXAMPLES = '''
         action: "unlink"    
 '''
 RETURN = '''
-dellemc_pmax_createsg:
+dellemc_pmax_manage_snap:
     description: Information about storage group created
     returned: success
     type: dict
     sample: '{
-        "some_detail": {
-            "somevalues":
-            }
-        }'
+        ""snapdetail": {
+            "generation": 0,
+            "isExpired": false,
+            "isLinked": true,
+            "isRestored": false,
+            "linkedStorageGroup": [
+                {
+                    "linkedCreationTimestamp": "12:10:35 Fri, 28 Dec 2018 UTC +0000",
+                    "name": "Ansible_lnk_SG",
+                    "percentageCopied": 0,
+                    "trackSize": 131072,
+                    "tracks": 24585
+                }
+            ],
+            "name": "Ansible_Snap",
+            "numSharedTracks": 0,
+            "numSourceVolumes": 1,
+            "numStorageGroupVolumes": 1,
+            "numUniqueTracks": 0,
+            "sourceVolume": [
+                {
+                    "capacity": 1639,
+                    "name": "0013A"
+                }
+            ],
+            "state": [
+                "Established"
+            ],
+            "timeToLiveExpiryDate": "13:03:56 Fri, 28 Dec 2018 UTC +0000",
+            "timestamp": "12:03:57 Fri, 28 Dec 2018 UTC +0000"
+        }
+    }
 '''
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.dellemc import dellemc_pmax_argument_spec, pmaxapi
@@ -193,15 +221,14 @@ def main():
 
         changed = True
 
-        module.exit_json(changed=changed, msg='SnapVX Action completed '
-                                              'Sucessfully')
-
     else:
         module.fail_json(msg='No Snapshot found with the supplied Parameters')
 
-    facts = "some facts to help user in task"
+    snapshotdetails=rep.get_snapshot_generation_details(sg_id=module.params[
+        'sgname'],snap_name=module.params['snapshotname'],gen_num=0)
+    facts = snapshotdetails
     result = {'state': 'info', 'changed': changed}
-    module.exit_json(ansible_facts={'some_detail': facts}, **result)
+    module.exit_json(ansible_facts={'snapdetail': facts}, **result)
 
 
 if __name__ == '__main__':
